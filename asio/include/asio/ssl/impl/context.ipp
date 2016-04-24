@@ -59,6 +59,12 @@ struct context::dh_cleanup
   ~dh_cleanup() { if (p) ::DH_free(p); }
 };
 
+struct context::ec_key_cleanup
+{
+  EC_KEY *p;
+  ~ec_key_cleanup() { if (p) ::EC_KEY_free(p); }
+};
+
 context::context(context::method m)
   : handle_(0)
 {
@@ -855,6 +861,68 @@ asio::error_code context::do_use_tmp_dh(
   ec = asio::error_code(
       static_cast<int>(::ERR_get_error()),
       asio::error::get_ssl_category());
+  return ec;
+}
+
+void context::use_tmp_ecdh(const std::string& certificate)
+{
+  asio::error_code ec;
+  use_tmp_ecdh(certificate, ec);
+  asio::detail::throw_error(ec, "use_tmp_ecdh");
+}
+
+asio::error_code context::use_tmp_ecdh(const std::string& certificate,
+		asio::error_code& ec)
+{
+  ::ERR_clear_error();
+
+  bio_cleanup bio = { ::BIO_new_file(certificate.c_str(), "r") };
+  if (bio.p)
+  {
+	return do_use_tmp_ecdh(bio.p,ec);
+  }
+
+  ec = asio::error_code(
+	  static_cast<int>(::ERR_get_error()),
+	  asio::error::get_ssl_category());
+  return ec;
+}
+
+asio::error_code context::do_use_tmp_ecdh(
+		BIO* bio, asio::error_code& ec)
+{
+  ::ERR_clear_error();
+
+  int nid = NID_undef;
+
+  x509_cleanup x509 = { ::PEM_read_bio_X509(bio, NULL, 0, NULL) };
+  if (x509.p)
+  {
+    evp_pkey_cleanup pkey = { ::X509_get_pubkey(x509.p) };
+    if(pkey.p)
+    {
+      int type = EVP_PKEY_type(pkey.p->type);
+      if(type == EVP_PKEY_EC)
+      {
+        const EC_GROUP *group = EC_KEY_get0_group(pkey.p->pkey.ec);
+        nid = EC_GROUP_get_curve_name(group);
+      }
+    }
+  }
+
+  ec_key_cleanup ec_key = { ::EC_KEY_new_by_curve_name(nid) };
+  if(ec_key.p)
+  {
+    if (::SSL_CTX_set_tmp_ecdh(handle_, ec_key.p) == 1 )
+    {
+      ec = asio::error_code();
+      return ec;
+    }
+  }
+
+  ec = asio::error_code(
+	  static_cast<int>(::ERR_get_error()),
+	  asio::error::get_ssl_category());
   return ec;
 }
 
