@@ -936,24 +936,24 @@ void context::use_tmp_ecdh(const std::string& certificate)
 }
 
 ASIO_SYNC_OP_VOID context::use_tmp_ecdh(const std::string& certificate,
-		asio::error_code& ec)
+        asio::error_code& ec)
 {
   ::ERR_clear_error();
 
   bio_cleanup bio = { ::BIO_new_file(certificate.c_str(), "r") };
   if (bio.p)
   {
-	return do_use_tmp_ecdh(bio.p,ec);
+    return do_use_tmp_ecdh(bio.p,ec);
   }
 
   ec = asio::error_code(
-	  static_cast<int>(::ERR_get_error()),
-	  asio::error::get_ssl_category());
+      static_cast<int>(::ERR_get_error()),
+      asio::error::get_ssl_category());
   ASIO_SYNC_OP_VOID_RETURN(ec);
 }
 
 ASIO_SYNC_OP_VOID context::do_use_tmp_ecdh(
-		BIO* bio, asio::error_code& ec)
+        BIO* bio, asio::error_code& ec)
 {
   ::ERR_clear_error();
 
@@ -985,8 +985,8 @@ ASIO_SYNC_OP_VOID context::do_use_tmp_ecdh(
   }
 
   ec = asio::error_code(
-	  static_cast<int>(::ERR_get_error()),
-	  asio::error::get_ssl_category());
+      static_cast<int>(::ERR_get_error()),
+      asio::error::get_ssl_category());
   ASIO_SYNC_OP_VOID_RETURN(ec);
 }
 
