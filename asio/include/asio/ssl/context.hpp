@@ -695,7 +695,7 @@ public:
    *
    * @note Calls @c SSL_CTX_set_tmp_ecdh.
    */
-  ASIO_DECL asio::error_code use_tmp_ecdh(
+  ASIO_DECL ASIO_SYNC_OP_VOID use_tmp_ecdh(
 		  const std::string& certificate, asio::error_code& ec);
 
   /// Set the password callback.
@@ -768,7 +768,7 @@ private:
       BIO* bio, asio::error_code& ec);
 
   // Helper function to set the temprorary ECC Diffie-Hellman parameters from a BIO.
-  ASIO_DECL asio::error_code do_use_tmp_ecdh(
+  ASIO_DECL ASIO_SYNC_OP_VOID do_use_tmp_ecdh(
   		  BIO* bio, asio::error_code& ec);
 
   // Helper function to make a BIO from a memory buffer.
